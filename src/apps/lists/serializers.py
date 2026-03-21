@@ -1,5 +1,12 @@
-from .models import List, ListItem
-from apps.characters.models import Character
+from rest_framework import serializers
+from .models import Favorite, List, ListItem
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Favorite
+        fields = '__all__'
+        read_only_fields = ['user']
 
 
 class ListSerializer(serializers.ModelSerializer):

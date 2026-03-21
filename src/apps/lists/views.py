@@ -86,3 +86,50 @@ class ListView(APIView):
             return Response({"error": "Lista não encontrada"}, status=404)
         
 
+class ListItemView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, list_id):
+        try:
+            list_obj = List.objects.get(id=list_id, user=request.user)
+        except List.DoesNotExist:
+            return Response({"error": "Lista não encontrada"}, status=404)
+
+        items = ListItem.objects.filter(list=list_obj)
+        serializer = ListItemSerializer(items, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, list_id):
+        api_id = request.data.get("api_id")
+
+        try:
+            list_obj = List.objects.get(id=list_id, user=request.user)
+        except List.DoesNotExist:
+            return Response({"error": "Lista não encontrada"}, status=404)
+
+        character = get_or_create_character(api_id)
+
+        item, created = ListItem.objects.get_or_create(
+            list=list_obj,
+            character=character
+        )
+
+        if not created:
+            return Response({"message": "Já existe na lista"})
+
+        serializer = ListItemSerializer(item)
+        return Response(serializer.data, status=201)
+
+    def delete(self, request, list_id):
+        api_id = request.data.get("api_id")
+
+        try:
+            item = ListItem.objects.get(
+                list__id=list_id,
+                list__user=request.user,
+                character__api_id=api_id
+            )
+            item.delete()
+            return Response({"message": "Removido da lista"})
+        except ListItem.DoesNotExist:
+            return Response({"error": "Item não encontrado"}, status=404)
