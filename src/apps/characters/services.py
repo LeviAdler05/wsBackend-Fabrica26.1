@@ -17,6 +17,18 @@ def fetch_character_from_api(api_id: int) -> dict:
     return response.json()
 
 
+def fetch_characters_from_api(params: dict = None) -> dict:
+    url = f"{BASE_URL}"
+
+    try:
+        response = requests.get(url, params=params, timeout=5)
+        response.raise_for_status()
+    except requests.RequestException:
+        raise Exception("Erro ao conectar com API externa")
+
+    return response.json()
+
+
 def get_or_create_character(api_id: int) -> Character:
     """
     Busca personagem no banco ou cria via API
