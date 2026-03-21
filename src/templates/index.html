@@ -6,7 +6,7 @@
 <div id="main-content">
     <!-- Hero Section -->
     <div class="text-center py-5">
-        <h1 class="display-3 fw-bold text-white mb-3" style="font-family: 'Schwifty', cursive; text-shadow: 2px 2px var(--rm-green);">RICKPEDIA</h1>
+        <h1 class="display-3 fw-bold text-white mb-3" style="font-family: Arial, sans-serif; text-shadow: 2px 2px var(--rm-green);">RICKPEDIA</h1>
         <p class="lead text-secondary">Explore o multiverso de Rick and Morty</p>
     </div>
 
@@ -43,7 +43,7 @@
     </nav>
 </div>
 
-<!-- Template for View List/Favorites (initially hidden) -->
+<!-- Template for View List/Favorites -->
 <div id="list-content" style="display: none;">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 id="list-title">Minha Lista</h2>
@@ -98,10 +98,12 @@
 
     function renderCharacters(characters) {
         const grid = document.getElementById('characters-grid');
+        const isAuth = !!localStorage.getItem('rm_token');
+
         grid.innerHTML = characters.map(c => `
             <div class="col">
                 <div class="card h-100">
-                    <img src="${c.image}" class="card-img-top" alt="${c.name}">
+                    <img src="${c.image}" class="card-img-top" alt="${c.name}" loading="lazy">
                     <div class="card-body">
                         <h5 class="card-title text-rm-green fw-bold">${c.name}</h5>
                         <p class="card-text mb-1">
@@ -133,23 +135,13 @@
         }
 
         let html = '';
-        // Prev
-        html += `
-            <li class="page-item ${!info.prev ? 'disabled' : ''}">
+        html += `<li class="page-item ${!info.prev ? 'disabled' : ''}">
                 <button class="page-link bg-dark text-white border-secondary" onclick="loadCharacters(${page - 1}, '${name}', '${status}')">Anterior</button>
-            </li>
-        `;
-
-        // Current
+            </li>`;
         html += `<li class="page-item active"><span class="page-link bg-rm-green border-rm-green text-dark">${page} de ${info.pages}</span></li>`;
-
-        // Next
-        html += `
-            <li class="page-item ${!info.next ? 'disabled' : ''}">
+        html += `<li class="page-item ${!info.next ? 'disabled' : ''}">
                 <button class="page-link bg-dark text-white border-secondary" onclick="loadCharacters(${page + 1}, '${name}', '${status}')">Próxima</button>
-            </li>
-        `;
-
+            </li>`;
         pagination.innerHTML = html;
     }
 
@@ -160,7 +152,6 @@
         loadCharacters(1, name, status);
     });
 
-    // Navigation between views
     function showHome() {
         document.getElementById('main-content').style.display = 'block';
         document.getElementById('list-content').style.display = 'none';
@@ -169,6 +160,7 @@
     }
 
     async function showFavorites() {
+        if (!localStorage.getItem('rm_token')) return showLoginModal();
         showLoading();
         document.getElementById('main-content').style.display = 'none';
         document.getElementById('my-lists-content').style.display = 'none';
@@ -178,6 +170,7 @@
 
         try {
             const response = await apiFetch('/api/lists/favorites/');
+            if (!response.ok) throw new Error();
             const data = await response.json();
             
             const grid = document.getElementById('list-items-grid');
@@ -194,6 +187,7 @@
     }
 
     async function showMyLists() {
+        if (!localStorage.getItem('rm_token')) return showLoginModal();
         showLoading();
         document.getElementById('main-content').style.display = 'none';
         document.getElementById('list-content').style.display = 'none';
@@ -202,6 +196,7 @@
 
         try {
             const response = await apiFetch('/api/lists/');
+            if (!response.ok) throw new Error();
             const data = await response.json();
             
             const grid = document.getElementById('my-lists-grid');
@@ -214,8 +209,7 @@
                             <div class="card-body text-center">
                                 <i class="fas fa-list-ul fa-3x mb-3 text-rm-blue"></i>
                                 <h4 class="card-title">${list.name}</h4>
-                                <p class="text-secondary">${list.items_count || 0} personagens</p>
-                                <div class="d-grid gap-2">
+                                <div class="d-grid gap-2 mt-3">
                                     <button class="btn btn-rm-blue" onclick="showListDetails(${list.id}, '${list.name}')">Ver Itens</button>
                                     <button class="btn btn-outline-danger btn-sm" onclick="deleteList(${list.id})">Excluir Lista</button>
                                 </div>
@@ -240,6 +234,7 @@
 
         try {
             const response = await apiFetch(`/api/lists/${listId}/items/`);
+            if (!response.ok) throw new Error();
             const data = await response.json();
             
             const grid = document.getElementById('list-items-grid');
@@ -284,7 +279,6 @@
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
             confirmButtonText: 'Sim, remover!',
             cancelButtonText: 'Cancelar'
         });
@@ -333,7 +327,6 @@
         }
     }
 
-    // Initial load
     loadCharacters();
 </script>
 {% endblock %}

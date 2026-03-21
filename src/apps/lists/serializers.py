@@ -1,8 +1,11 @@
 from rest_framework import serializers
 from .models import Favorite, List, ListItem
+from apps.characters.serializers import CharacterSerializer
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
+    character = CharacterSerializer(read_only=True)
+
     class Meta:
         model = Favorite
         fields = '__all__'
@@ -17,6 +20,8 @@ class ListSerializer(serializers.ModelSerializer):
 
 
 class ListItemSerializer(serializers.ModelSerializer):
+    character = CharacterSerializer(read_only=True)
+
     class Meta:
         model = ListItem
         fields = '__all__'
