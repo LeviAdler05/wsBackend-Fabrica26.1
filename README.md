@@ -1,122 +1,118 @@
-# 🧪 Rickpedia - Rick and Morty Manager API
+# 🧪 Rickpedia - O Portal Completo para o Multiverso de Rick and Morty
 
-[![Django](https://img.shields.io/badge/Django-6.0-092E20?style=for-the-badge&logo=django)](https://www.djangoproject.com/)
+[![Django](https://img.shields.io/badge/Django-5.1-092E20?style=for-the-badge&logo=django)](https://www.djangoproject.com/)
 [![DRF](https://img.shields.io/badge/DRF-3.15-A30000?style=for-the-badge&logo=django)](https://www.django-rest-framework.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791?style=for-the-badge&logo=postgresql)](https://www.postgresql.org/)
 [![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=for-the-badge&logo=docker)](https://www.docker.com/)
 
-O **Rickpedia** é uma plataforma backend robusta construída com Django e Django REST Framework (DRF) que consome a API oficial de **Rick and Morty**. O projeto permite que usuários gerenciem seus personagens favoritos, criem listas personalizadas e explorem o multiverso da série.
+Bem-vindo ao **Rickpedia**! Esta é uma aplicação web completa (Full Stack) que permite explorar o multiverso da série *Rick and Morty*. Você pode buscar personagens, favoritá-los, criar suas próprias listas personalizadas e gerenciar sua conta de forma segura.
+
+Este projeto utiliza o que há de mais moderno no **Backend** (Django REST Framework) e uma interface **Frontend** profissional e responsiva.
 
 ---
 
-## 🚀 Tecnologias e Arquitetura
+## ✨ Funcionalidades do Projeto
 
-- **Python 3.11+** e **Django 6.0**
-- **Django REST Framework (DRF):** Para construção da API.
-- **PostgreSQL:** Banco de dados relacional robusto.
-- **Docker & Docker Compose:** Containerização completa da aplicação e banco.
-- **Swagger (drf-yasg):** Documentação interativa da API.
-- **Integração Externa:** Consumo da [Rick and Morty API](https://rickandmortyapi.com/).
-- **Arquitetura Clean:** Lógica de negócio isolada em `services.py` para consumo de APIs externas.
+### 👤 Autenticação de Usuários (Conta Própria)
+*   **Cadastro:** Crie sua conta com usuário, e-mail e senha.
+*   **Login Seguro:** Sistema baseado em Tokens (DRF Token Authentication).
+*   **Área Restrita:** Apenas usuários logados podem favoritar e criar listas.
 
----
+### 🧬 Exploração do Multiverso (API Rick and Morty)
+*   **Lista Dinâmica:** Navegue por todos os personagens da série.
+*   **Busca Inteligente:** Filtre personagens por **Nome** ou **Status** (Vivo, Morto, Desconhecido).
+*   **Paginação:** Navegação fluida entre as centenas de personagens disponíveis.
+*   **Cache Inteligente:** O sistema salva informações no banco de dados local para maior rapidez.
 
-## ⚙️ Funcionalidades principais
+### 💖 Favoritos e Coleções Personalizadas (CRUD Completo)
+*   **Favoritos:** Salve seus personagens prediletos com um clique.
+*   **Minhas Listas:** Crie listas com nomes personalizados (Ex: "Ricks do Mal", "Alienígenas Estranhos").
+*   **Gestão:** Adicione ou remova personagens de suas listas e exclua listas que não deseja mais.
 
-- **Autenticação:** Sistema de Login com geração de **Token DRF**.
-- **Gestão de Personagens:** Busca automática na API externa e cache no banco de dados local.
-- **Favoritos:** Usuários podem marcar personagens como favoritos.
-- **Listas Customizadas (CRUD):** Criação, edição e exclusão de listas de personagens (Ex: "Vilões que eu gosto", "Versões do Rick").
-- **Interface Visual:** Home page amigável desenvolvida com Django Templates e CSS personalizado.
-- **Documentação:** Endpoints documentados via Swagger e Redoc.
-
----
-
-## 🐳 Como Rodar o Projeto (Recomendado: Docker)
-
-A maneira mais rápida de subir o projeto é utilizando o Docker Compose, que já configura o banco de dados PostgreSQL automaticamente.
-
-### 1. Clone o Repositório
-```bash
-git clone https://github.com/LeviAdler05/wsBackend-Fabrica26.1
-cd wsBackend-Fabrica26.1
-```
-
-### 2. Configure as Variáveis de Ambiente
-Crie um arquivo `.env` na raiz do projeto (se não existir) com base no exemplo abaixo:
-```env
-SECRET_KEY=sua_chave_secreta_aqui
-DEBUG=True
-ALLOWED_HOSTS=*
-DB_NAME=rickpedia
-DB_USER=postgres
-DB_PASSWORD=postgres
-DB_HOST=db
-```
-
-### 3. Suba os Containers
-```bash
-docker-compose up --build
-```
-*A API estará disponível em `http://localhost:8000`.*
-
-### 4. Execute as Migrações e Crie o Admin
-Em um novo terminal, rode:
-```bash
-# Criar tabelas no banco
-docker-compose exec web python manage.py migrate
-
-# Criar usuário administrador
-docker-compose exec web python manage.py createsuperuser
-```
+### 🎨 Interface Profissional
+*   Design moderno inspirado na série (Dark Mode).
+*   Alertas visuais interativos (SweetAlert2).
+*   Totalmente responsivo (funciona no celular e computador).
 
 ---
 
-## 🛠️ Desenvolvimento Local (Sem Docker)
+## 🚀 Como Rodar o Projeto
 
-Caso prefira rodar sem Docker, você precisará de um banco PostgreSQL instalado localmente.
+Existem duas formas de rodar o projeto. A mais fácil é usando o **Docker**.
 
-1.  **Crie e ative o ambiente virtual:**
+### Opção 1: Usando Docker (Recomendado)
+*O Docker configura tudo para você, inclusive o banco de dados.*
+
+1.  **Baixe o código:**
+    ```bash
+    git clone https://github.com/LeviAdler05/wsBackend-Fabrica26.1
+    cd wsBackend-Fabrica26.1
+    ```
+2.  **Inicie o sistema:**
+    Certifique-se de que o Docker Desktop está aberto e rode:
+    ```bash
+    docker-compose up --build
+    ```
+3.  **Prepare o Banco de Dados:**
+    Abra um novo terminal na mesma pasta e rode estes dois comandos:
+    ```bash
+    docker-compose exec web python manage.py migrate
+    docker-compose exec web python manage.py createsuperuser
+    ```
+4.  **Acesse:** Abra o navegador em `http://localhost:8000`.
+
+---
+
+### Opção 2: Rodando Localmente (Sem Docker)
+*Você precisará ter o Python instalado e um banco PostgreSQL rodando no seu PC.*
+
+1.  **Crie um Ambiente Virtual:**
     ```bash
     python -m venv venv
-    .\venv\Scripts\activate  # Windows
-    source venv/bin/activate # Linux/Mac
+    .\venv\Scripts\activate  # No Windows
+    source venv/bin/activate # No Linux/Mac
     ```
 2.  **Instale as dependências:**
     ```bash
     pip install -r requirements.txt
     ```
-3.  **Execute as migrações:**
-    ```bash
-    python src/manage.py migrate
+3.  **Configure o Banco de Dados:**
+    Crie um arquivo chamado `.env` na raiz do projeto e coloque as informações do seu banco:
+    ```env
+    SECRET_KEY=sua_chave_secreta
+    DEBUG=True
+    DB_NAME=rickpedia
+    DB_USER=seu_usuario_postgres
+    DB_PASSWORD=sua_senha_postgres
+    DB_HOST=localhost
     ```
-4.  **Inicie o servidor:**
+4.  **Migrações e Servidor:**
     ```bash
-    python src/manage.py runserver
+    cd src
+    python manage.py migrate
+    python manage.py runserver
     ```
+5.  **Acesse:** `http://127.0.0.1:8000`.
 
 ---
 
-## 📂 Estrutura de Pastas
+## 🛠️ Tecnologias Utilizadas
 
-```text
-src/
-├── apps/
-│   ├── accounts/     # Autenticação e Usuários
-│   ├── characters/   # Integração com API e Model de Personagens
-│   └── lists/        # CRUD de Listas e Favoritos
-├── rickpedia/        # Configurações do Projeto (Settings/URLs)
-├── templates/        # Páginas HTML (Django Templates)
-└── manage.py
-```
+*   **Backend:** Python 3.11+, Django 5.1, Django REST Framework.
+*   **Banco de Dados:** PostgreSQL 15.
+*   **Frontend:** HTML5, CSS3, JavaScript (Vanilla), Bootstrap 5, FontAwesome, SweetAlert2.
+*   **Documentação:** Swagger (drf-yasg).
+*   **Integração:** Rick and Morty API Oficial.
 
 ---
 
-## 📖 Acesso e Documentação
+## 📖 Endpoints Importantes (Para Desenvolvedores)
 
-- **Página Inicial:** `http://localhost:8000/` (Interface amigável).
-- **Swagger UI:** `http://localhost:8000/swagger/` (Melhor lugar para testar a API).
-- **Admin Django:** `http://localhost:8000/admin/` (Gestão de dados).
+*   **Página Inicial:** `/`
+*   **API de Personagens:** `/api/characters/`
+*   **API de Favoritos:** `/api/lists/favorites/`
+*   **API de Listas:** `/api/lists/`
+*   **Swagger (Documentação):** `/swagger/`
 
 ---
 
