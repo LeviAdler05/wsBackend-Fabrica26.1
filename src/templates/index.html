@@ -1,72 +1,339 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rickpedia - Home</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #202329;
-            color: white;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            text-align: center;
-        }
-        .container {
-            background-color: #3c3e44;
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            max-width: 600px;
-        }
-        h1 {
-            color: #97ce4c;
-            margin-bottom: 1rem;
-        }
-        p {
-            font-size: 1.1rem;
-            line-height: 1.6;
-            color: #f5f5f5;
-        }
-        .btn-group {
-            margin-top: 2rem;
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-        }
-        .btn {
-            padding: 0.8rem 1.5rem;
-            border-radius: 5px;
-            text-decoration: none;
-            font-weight: bold;
-            transition: opacity 0.2s;
-        }
-        .btn-primary {
-            background-color: #97ce4c;
-            color: #202329;
-        }
-        .btn-secondary {
-            background-color: #e89ac7;
-            color: #202329;
-        }
-        .btn:hover {
-            opacity: 0.8;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Rickpedia API</h1>
-        <p>Bem-vindo ao projeto Rickpedia! Esta é uma aplicação Django que consome a API de Rick and Morty para gerenciar personagens, favoritos e listas personalizadas.</p>
-        <div class="btn-group">
-            <a href="/swagger/" class="btn btn-primary">Documentação Swagger</a>
-            <a href="/admin/" class="btn btn-secondary">Painel Admin</a>
+{% extends 'base.html' %}
+
+{% block title %}Início - Rickpedia{% endblock %}
+
+{% block content %}
+<div id="main-content">
+    <!-- Hero Section -->
+    <div class="text-center py-5">
+        <h1 class="display-3 fw-bold text-white mb-3" style="font-family: 'Schwifty', cursive; text-shadow: 2px 2px var(--rm-green);">RICKPEDIA</h1>
+        <p class="lead text-secondary">Explore o multiverso de Rick and Morty</p>
+    </div>
+
+    <!-- Search Section -->
+    <div class="search-container">
+        <form id="search-form" class="row g-3">
+            <div class="col-md-8">
+                <input type="text" id="search-name" class="form-control bg-dark text-white border-secondary" placeholder="Nome do personagem...">
+            </div>
+            <div class="col-md-3">
+                <select id="search-status" class="form-select bg-dark text-white border-secondary">
+                    <option value="">Todos os Status</option>
+                    <option value="alive">Vivo</option>
+                    <option value="dead">Morto</option>
+                    <option value="unknown">Desconhecido</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-rm-green w-100"><i class="fas fa-search"></i></button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Characters Grid -->
+    <div id="characters-grid" class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 mb-5">
+        <!-- Characters will be loaded here -->
+    </div>
+
+    <!-- Pagination -->
+    <nav aria-label="Page navigation" class="mb-5">
+        <ul id="pagination" class="pagination justify-content-center">
+            <!-- Pagination will be loaded here -->
+        </ul>
+    </nav>
+</div>
+
+<!-- Template for View List/Favorites (initially hidden) -->
+<div id="list-content" style="display: none;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 id="list-title">Minha Lista</h2>
+        <button class="btn btn-outline-light btn-sm" onclick="showHome()"><i class="fas fa-arrow-left me-1"></i> Voltar</button>
+    </div>
+    <div id="list-items-grid" class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+        <!-- Items will be loaded here -->
+    </div>
+</div>
+
+<div id="my-lists-content" style="display: none;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Minhas Listas</h2>
+        <div>
+            <button class="btn btn-rm-green btn-sm" onclick="createListModal.show()"><i class="fas fa-plus me-1"></i> Nova Lista</button>
+            <button class="btn btn-outline-light btn-sm" onclick="showHome()"><i class="fas fa-arrow-left me-1"></i> Voltar</button>
         </div>
     </div>
-</body>
-</html>
+    <div id="my-lists-grid" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        <!-- User lists will be loaded here -->
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentPage = 1;
+
+    async function loadCharacters(page = 1, name = '', status = '') {
+        showLoading();
+        let url = `/api/characters/?page=${page}`;
+        if (name) url += `&name=${name}`;
+        if (status) url += `&status=${status}`;
+
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            if (response.ok) {
+                renderCharacters(data.results);
+                renderPagination(data.info, page, name, status);
+            } else {
+                document.getElementById('characters-grid').innerHTML = '<div class="col-12 text-center p-5"><h3>Nenhum personagem encontrado.</h3></div>';
+                document.getElementById('pagination').innerHTML = '';
+            }
+        } catch (err) {
+            Swal.fire('Erro', 'Erro ao carregar personagens', 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    function renderCharacters(characters) {
+        const grid = document.getElementById('characters-grid');
+        grid.innerHTML = characters.map(c => `
+            <div class="col">
+                <div class="card h-100">
+                    <img src="${c.image}" class="card-img-top" alt="${c.name}">
+                    <div class="card-body">
+                        <h5 class="card-title text-rm-green fw-bold">${c.name}</h5>
+                        <p class="card-text mb-1">
+                            <span class="status-indicator status-${c.status.toLowerCase()}"></span>
+                            ${c.status} - ${c.species}
+                        </p>
+                        <p class="card-text small text-secondary">
+                            <i class="fas fa-map-marker-alt me-1"></i> ${c.location.name}
+                        </p>
+                    </div>
+                    <div class="card-footer bg-transparent border-top border-secondary d-flex justify-content-between">
+                        <button class="btn btn-sm btn-outline-light" onclick="toggleFavorite(${c.id})" title="Favoritar">
+                            <i class="fas fa-heart"></i>
+                        </button>
+                        <button class="btn btn-sm btn-rm-green" onclick="openAddToList(${c.id})">
+                            <i class="fas fa-plus me-1"></i> Lista
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function renderPagination(info, page, name, status) {
+        const pagination = document.getElementById('pagination');
+        if (!info || info.pages <= 1) {
+            pagination.innerHTML = '';
+            return;
+        }
+
+        let html = '';
+        // Prev
+        html += `
+            <li class="page-item ${!info.prev ? 'disabled' : ''}">
+                <button class="page-link bg-dark text-white border-secondary" onclick="loadCharacters(${page - 1}, '${name}', '${status}')">Anterior</button>
+            </li>
+        `;
+
+        // Current
+        html += `<li class="page-item active"><span class="page-link bg-rm-green border-rm-green text-dark">${page} de ${info.pages}</span></li>`;
+
+        // Next
+        html += `
+            <li class="page-item ${!info.next ? 'disabled' : ''}">
+                <button class="page-link bg-dark text-white border-secondary" onclick="loadCharacters(${page + 1}, '${name}', '${status}')">Próxima</button>
+            </li>
+        `;
+
+        pagination.innerHTML = html;
+    }
+
+    document.getElementById('search-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('search-name').value;
+        const status = document.getElementById('search-status').value;
+        loadCharacters(1, name, status);
+    });
+
+    // Navigation between views
+    function showHome() {
+        document.getElementById('main-content').style.display = 'block';
+        document.getElementById('list-content').style.display = 'none';
+        document.getElementById('my-lists-content').style.display = 'none';
+        loadCharacters();
+    }
+
+    async function showFavorites() {
+        showLoading();
+        document.getElementById('main-content').style.display = 'none';
+        document.getElementById('my-lists-content').style.display = 'none';
+        const listContent = document.getElementById('list-content');
+        listContent.style.display = 'block';
+        document.getElementById('list-title').innerText = 'Meus Favoritos';
+
+        try {
+            const response = await apiFetch('/api/lists/favorites/');
+            const data = await response.json();
+            
+            const grid = document.getElementById('list-items-grid');
+            if (data.length === 0) {
+                grid.innerHTML = '<div class="col-12 text-center p-5"><h3>Você ainda não tem favoritos.</h3></div>';
+            } else {
+                grid.innerHTML = data.map(item => renderItemCard(item.character, 'favorite')).join('');
+            }
+        } catch (err) {
+            Swal.fire('Erro', 'Erro ao carregar favoritos', 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    async function showMyLists() {
+        showLoading();
+        document.getElementById('main-content').style.display = 'none';
+        document.getElementById('list-content').style.display = 'none';
+        const myListsContent = document.getElementById('my-lists-content');
+        myListsContent.style.display = 'block';
+
+        try {
+            const response = await apiFetch('/api/lists/');
+            const data = await response.json();
+            
+            const grid = document.getElementById('my-lists-grid');
+            if (data.length === 0) {
+                grid.innerHTML = '<div class="col-12 text-center p-5"><h3>Você não tem listas.</h3></div>';
+            } else {
+                grid.innerHTML = data.map(list => `
+                    <div class="col" id="list-card-${list.id}">
+                        <div class="card h-100 border-1 border-secondary">
+                            <div class="card-body text-center">
+                                <i class="fas fa-list-ul fa-3x mb-3 text-rm-blue"></i>
+                                <h4 class="card-title">${list.name}</h4>
+                                <p class="text-secondary">${list.items_count || 0} personagens</p>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-rm-blue" onclick="showListDetails(${list.id}, '${list.name}')">Ver Itens</button>
+                                    <button class="btn btn-outline-danger btn-sm" onclick="deleteList(${list.id})">Excluir Lista</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        } catch (err) {
+            Swal.fire('Erro', 'Erro ao carregar listas', 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    async function showListDetails(listId, listName) {
+        showLoading();
+        document.getElementById('my-lists-content').style.display = 'none';
+        const listContent = document.getElementById('list-content');
+        listContent.style.display = 'block';
+        document.getElementById('list-title').innerText = `Lista: ${listName}`;
+
+        try {
+            const response = await apiFetch(`/api/lists/${listId}/items/`);
+            const data = await response.json();
+            
+            const grid = document.getElementById('list-items-grid');
+            if (data.length === 0) {
+                grid.innerHTML = '<div class="col-12 text-center p-5"><h3>Esta lista está vazia.</h3></div>';
+            } else {
+                grid.innerHTML = data.map(item => renderItemCard(item.character, 'list', listId)).join('');
+            }
+        } catch (err) {
+            Swal.fire('Erro', 'Erro ao carregar itens da lista', 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    function renderItemCard(c, type, listId = null) {
+        return `
+            <div class="col" id="item-${c.api_id}">
+                <div class="card h-100">
+                    <img src="${c.image}" class="card-img-top" alt="${c.name}">
+                    <div class="card-body">
+                        <h5 class="card-title text-rm-green fw-bold">${c.name}</h5>
+                        <p class="card-text mb-1">
+                            <span class="status-indicator status-${c.status.toLowerCase()}"></span>
+                            ${c.status} - ${c.species}
+                        </p>
+                    </div>
+                    <div class="card-footer bg-transparent border-top border-secondary text-center">
+                        <button class="btn btn-sm btn-outline-danger w-100" onclick="removeItem('${c.api_id}', '${type}', ${listId})">
+                            <i class="fas fa-trash me-1"></i> Remover
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    async function removeItem(apiId, type, listId) {
+        const result = await Swal.fire({
+            title: 'Tem certeza?',
+            text: "Deseja remover este personagem?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sim, remover!',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (result.isConfirmed) {
+            let url = type === 'favorite' ? '/api/lists/favorites/' : `/api/lists/${listId}/items/`;
+            try {
+                const response = await apiFetch(url, {
+                    method: 'DELETE',
+                    body: { api_id: apiId }
+                });
+                if (response.ok) {
+                    document.getElementById(`item-${apiId}`).remove();
+                    Swal.fire('Removido!', 'Personagem removido com sucesso.', 'success');
+                }
+            } catch (err) {
+                Swal.fire('Erro', 'Erro ao remover item', 'error');
+            }
+        }
+    }
+
+    async function deleteList(listId) {
+        const result = await Swal.fire({
+            title: 'Excluir Lista?',
+            text: "Isso removerá a lista e todos os seus itens permanentemente.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Excluir',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                const response = await apiFetch('/api/lists/', {
+                    method: 'DELETE',
+                    body: { id: listId }
+                });
+                if (response.ok) {
+                    document.getElementById(`list-card-${listId}`).remove();
+                    Swal.fire('Excluída!', 'Lista removida com sucesso.', 'success');
+                }
+            } catch (err) {
+                Swal.fire('Erro', 'Erro ao excluir lista', 'error');
+            }
+        }
+    }
+
+    // Initial load
+    loadCharacters();
+</script>
+{% endblock %}
