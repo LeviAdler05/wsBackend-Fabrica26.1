@@ -20,3 +20,6 @@ class ListItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = ListItem
         fields = '__all__'
+
+class AddCharacterSerializer(serializers.Serializer):
+    api_id = serializers.IntegerField()

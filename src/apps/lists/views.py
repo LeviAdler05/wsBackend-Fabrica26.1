@@ -1,20 +1,23 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.contrib.auth.models import User
 from rest_framework.permissions import IsAuthenticated
-from .models import List, ListItem
-from .serializers import ListSerializer, ListItemSerializer
 
+from drf_yasg.utils import swagger_auto_schema
 
-from .models import Favorite
-from .serializers import FavoriteSerializer
+from .models import Favorite, List, ListItem
+from .serializers import (
+    FavoriteSerializer,
+    ListSerializer,
+    ListItemSerializer,
+    AddCharacterSerializer
+)
+
 from apps.characters.services import get_or_create_character
 
 
 class FavoriteView(APIView):
     permission_classes = [IsAuthenticated]
-    
 
     def get(self, request):
         favorites = Favorite.objects.filter(user=request.user)
@@ -33,6 +36,7 @@ class FavoriteView(APIView):
             user=request.user,
             character=character
         )
+
         if not created:
             return Response({"message": "Já favoritado"})
 
@@ -51,7 +55,7 @@ class FavoriteView(APIView):
             return Response({"message": "Removido"})
         except Favorite.DoesNotExist:
             return Response({"error": "Não encontrado"}, status=404)
-        
+
 
 class ListView(APIView):
     permission_classes = [IsAuthenticated]
@@ -84,7 +88,7 @@ class ListView(APIView):
             return Response({"message": "Lista removida"})
         except List.DoesNotExist:
             return Response({"error": "Lista não encontrada"}, status=404)
-        
+
 
 class ListItemView(APIView):
     permission_classes = [IsAuthenticated]
@@ -99,8 +103,17 @@ class ListItemView(APIView):
         serializer = ListItemSerializer(items, many=True)
         return Response(serializer.data)
 
+    @swagger_auto_schema(
+        operation_description="Adicionar personagem à lista",
+        request_body=AddCharacterSerializer
+    )
     def post(self, request, list_id):
-        api_id = request.data.get("api_id")
+        serializer = AddCharacterSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+
+        api_id = serializer.validated_data["api_id"]
 
         try:
             list_obj = List.objects.get(id=list_id, user=request.user)
@@ -117,8 +130,7 @@ class ListItemView(APIView):
         if not created:
             return Response({"message": "Já existe na lista"})
 
-        serializer = ListItemSerializer(item)
-        return Response(serializer.data, status=201)
+        return Response({"message": "Adicionado com sucesso"}, status=201)
 
     def delete(self, request, list_id):
         api_id = request.data.get("api_id")
