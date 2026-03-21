@@ -9,7 +9,7 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Schwifty&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --rm-green: #97ce4c;
@@ -144,12 +144,19 @@
                     <li class="nav-item auth-required" style="display: none;">
                         <a class="nav-link" href="#" onclick="showMyLists()"><i class="fas fa-list me-1"></i> Minhas Listas</a>
                     </li>
+                    <!-- Links Extras Pedidos -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="/swagger/" target="_blank"><i class="fas fa-code me-1"></i> Swagger</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/" target="_blank"><i class="fas fa-user-shield me-1"></i> Admin</a>
+                    </li>
                 </ul>
                 <div class="d-flex" id="auth-buttons">
                     <button class="btn btn-outline-light me-2" onclick="showLoginModal()">Login</button>
                     <button class="btn btn-rm-green" onclick="showSignupModal()">Cadastrar</button>
                 </div>
-                <div class="d-flex align-items-center" id="user-info" style="display: none !important;">
+                <div id="user-info" style="display: none;">
                     <span class="me-3 text-light" id="username-display"></span>
                     <button class="btn btn-outline-danger btn-sm" onclick="logout()">Sair</button>
                 </div>
@@ -170,14 +177,10 @@
     <footer>
         <div class="container text-center text-secondary">
             <p>&copy; 2026 Rickpedia - Desenvolvido com Rick and Morty API</p>
-            <div class="social-links">
-                <a href="#" class="text-secondary me-3"><i class="fab fa-github fa-lg"></i></a>
-                <a href="#" class="text-secondary"><i class="fab fa-twitter fa-lg"></i></a>
-            </div>
         </div>
     </footer>
 
-    <!-- Modais -->
+    <!-- Modais (Mantidos iguais) -->
     <!-- Login Modal -->
     <div class="modal fade" id="loginModal" tabindex="-1">
         <div class="modal-dialog">
@@ -276,7 +279,6 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        // Global variables and helper functions
         let currentCharacterId = null;
 
         function showLoading() { document.getElementById('loading-spinner').style.display = 'block'; }
@@ -285,27 +287,30 @@
         function checkAuth() {
             const token = localStorage.getItem('rm_token');
             const username = localStorage.getItem('rm_username');
+            const authBtns = document.getElementById('auth-buttons');
+            const userInfo = document.getElementById('user-info');
+            const authRequired = document.querySelectorAll('.auth-required');
             
-            if (token) {
-                document.getElementById('auth-buttons').style.display = 'none';
-                document.getElementById('user-info').style.setProperty('display', 'flex', 'important');
+            if (token && username) {
+                authBtns.style.display = 'none';
+                userInfo.style.display = 'flex';
+                userInfo.classList.add('d-flex', 'align-items-center');
                 document.getElementById('username-display').innerText = `Olá, ${username}`;
-                document.querySelectorAll('.auth-required').forEach(el => el.style.display = 'block');
+                authRequired.forEach(el => el.style.display = 'block');
                 return true;
             } else {
-                document.getElementById('auth-buttons').style.display = 'flex';
-                document.getElementById('user-info').style.setProperty('display', 'none', 'important');
-                document.querySelectorAll('.auth-required').forEach(el => el.style.display = 'none');
+                authBtns.style.display = 'flex';
+                userInfo.style.display = 'none';
+                userInfo.classList.remove('d-flex');
+                authRequired.forEach(el => el.style.display = 'none');
                 return false;
             }
         }
 
-        // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             checkAuth();
         });
 
-        // Modals
         const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
         const signupModal = new bootstrap.Modal(document.getElementById('signupModal'));
         const createListModal = new bootstrap.Modal(document.getElementById('createListModal'));
@@ -314,7 +319,30 @@
         function showLoginModal() { loginModal.show(); }
         function showSignupModal() { signupModal.show(); }
 
-        // Auth Actions
+        // Centralized apiFetch
+        async function apiFetch(url, options = {}) {
+            const token = localStorage.getItem('rm_token');
+            const headers = options.headers || {};
+            
+            if (token) {
+                headers['Authorization'] = `Token ${token}`;
+            }
+
+            if (options.body && typeof options.body === 'object' && !(options.body instanceof FormData)) {
+                headers['Content-Type'] = 'application/json';
+                options.body = JSON.stringify(options.body);
+            }
+
+            options.headers = headers;
+            const response = await fetch(url, options);
+            
+            if (response.status === 401) {
+                logout(); // Token expirado ou inválido
+            }
+            
+            return response;
+        }
+
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const username = document.getElementById('loginUsername').value;
@@ -332,9 +360,8 @@
                     localStorage.setItem('rm_token', data.token);
                     localStorage.setItem('rm_username', username);
                     loginModal.hide();
-                    Swal.fire('Sucesso!', 'Você está logado.', 'success');
-                    checkAuth();
-                    location.reload(); // Simple way to refresh UI
+                    await Swal.fire('Sucesso!', 'Você está logado.', 'success');
+                    location.reload();
                 } else {
                     Swal.fire('Erro', data.error || 'Falha no login', 'error');
                 }
@@ -361,8 +388,7 @@
                     localStorage.setItem('rm_token', data.token);
                     localStorage.setItem('rm_username', username);
                     signupModal.hide();
-                    Swal.fire('Bem-vindo!', 'Sua conta foi criada.', 'success');
-                    checkAuth();
+                    await Swal.fire('Bem-vindo!', 'Sua conta foi criada.', 'success');
                     location.reload();
                 } else {
                     Swal.fire('Erro', data.error || 'Falha no cadastro', 'error');
@@ -375,27 +401,9 @@
         function logout() {
             localStorage.removeItem('rm_token');
             localStorage.removeItem('rm_username');
-            checkAuth();
-            Swal.fire('Tchau!', 'Você saiu com sucesso.', 'info');
             location.href = '/';
         }
 
-        async function apiFetch(url, options = {}) {
-            const token = localStorage.getItem('rm_token');
-            if (token) {
-                options.headers = {
-                    ...options.headers,
-                    'Authorization': `Token ${token}`
-                };
-            }
-            if (options.body && typeof options.body === 'object') {
-                options.headers['Content-Type'] = 'application/json';
-                options.body = JSON.stringify(options.body);
-            }
-            return fetch(url, options);
-        }
-
-        // Global functions for Favorites and Lists
         async function toggleFavorite(apiId) {
             if (!checkAuth()) {
                 showLoginModal();
@@ -412,11 +420,12 @@
                 if (response.ok) {
                     Swal.fire('Favoritado!', 'Personagem adicionado aos favoritos.', 'success');
                 } else if (data.message === "Já favoritado") {
-                    // Try to delete instead? Or just info
                     Swal.fire('Info', 'Você já favoritou este personagem.', 'info');
+                } else {
+                    Swal.fire('Erro', data.error || 'Erro ao favoritar', 'error');
                 }
             } catch (err) {
-                Swal.fire('Erro', 'Erro ao favoritar', 'error');
+                Swal.fire('Erro', 'Erro de conexão', 'error');
             }
         }
 
@@ -486,9 +495,11 @@
                 });
                 if (response.ok) {
                     createListModal.hide();
-                    Swal.fire('Sucesso!', 'Lista criada com sucesso.', 'success');
+                    await Swal.fire('Sucesso!', 'Lista criada com sucesso.', 'success');
                     if (currentCharacterId) {
-                        openAddToList(currentCharacterId); // Re-open selection if we were adding
+                        openAddToList(currentCharacterId);
+                    } else {
+                        if (typeof showMyLists === 'function') showMyLists();
                     }
                 }
             } catch (err) {
