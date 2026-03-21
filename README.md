@@ -7,9 +7,6 @@
 
 Bem-vindo ao **Rickpedia**! Esta é uma aplicação web completa (Full Stack) que permite explorar o multiverso da série *Rick and Morty*. Você pode buscar personagens, favoritá-los, criar suas próprias listas personalizadas e gerenciar sua conta de forma segura.
 
-Este projeto utiliza o que há de mais moderno no **Backend** (Django REST Framework) e uma interface **Frontend** profissional e responsiva.
-
----
 
 ## ✨ Funcionalidades do Projeto
 
@@ -99,6 +96,7 @@ Existem duas formas de rodar o projeto. A mais fácil é usando o **Docker**.
 ## 🛠️ Tecnologias Utilizadas
 
 *   **Backend:** Python 3.11+, Django 5.1, Django REST Framework.
+*   **Segurança:** Configuração de `DEFAULT_AUTHENTICATION_CLASSES` para suportar `TokenAuthentication`.
 *   **Banco de Dados:** PostgreSQL 15.
 *   **Frontend:** HTML5, CSS3, JavaScript (Vanilla), Bootstrap 5, FontAwesome, SweetAlert2.
 *   **Documentação:** Swagger (drf-yasg).
