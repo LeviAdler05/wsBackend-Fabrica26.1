@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
+from django.views.generic import TemplateView
 
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
@@ -18,6 +19,7 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', TemplateView.as_view(template_name='index.html'), name='home'),
 
     path('api/auth/', include('apps.accounts.urls')),
     path('api/characters/', include('apps.characters.urls')),
