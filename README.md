@@ -117,3 +117,8 @@ Existem duas formas de rodar o projeto. A mais fácil é usando o **Docker**.
 ## 📝 Autor
 
 Desenvolvido por **Levi Adler** - [GitHub](https://github.com/LeviAdler05)
+
+Imagem do projeto
+
+<img width="1917" height="956" alt="image" src="https://github.com/user-attachments/assets/0d9595e5-da16-4c2f-a14b-11b6d2ff9546" />
+
