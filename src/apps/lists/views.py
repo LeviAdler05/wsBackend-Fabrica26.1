@@ -1,6 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.contrib.auth.models import User
+
 
 from .models import Favorite
 from .serializers import FavoriteSerializer
@@ -22,10 +24,12 @@ class FavoriteView(APIView):
 
         character = get_or_create_character(api_id)
 
+        user = User.objects.first()
+
         favorite, created = Favorite.objects.get_or_create(
-            user=request.user,
+            user=user,
             character=character
-        )
+)
 
         if not created:
             return Response({"message": "Já favoritado"})
